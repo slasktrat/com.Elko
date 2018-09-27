@@ -1,32 +1,75 @@
-"use strict";
+'use strict';
 
 const Homey = require('homey');
-
 const ZigBeeDevice = require('homey-meshdriver').ZigBeeDevice;
 
-class ESH316GLED  extends ZigBeeDevice {
+const maxBrightness = 255;
 
-	onMeshInit() {
-		this.enableDebug();
-		this.printNode();
-
-		if (this.hasCapability('onoff')) this.registerCapability('onoff', 'genOnOff');
-		this.registerAttrReportListener('genOnOff', 'onOff', 10, 3600, 0, value => {
-			this.log('onoff', value);
-			this.setCapabilityValue('onoff', value === 1);
-		}, 0);
-
-		if (this.hasCapability('dim')) this.registerCapability('dim', 'genLevelCtrl');
-		this.registerAttrReportListener('genLevelCtrl', 'currentLevel', 10, 3600, 5, value => {
-			this.log('dim report', value);
-			this.setCapabilityValue('dim', value / 254);
-		}, 0);
+class ESH316GLED extends ZigBeeDevice {
 
 
-		}
+  	// this method is called when the Device is inited
+  	onMeshInit() {
+      this.enableDebug();
+
+
+        		// register a capability listener
+        		this.registerCapabilityListener('onoff', this.onCapabilityOnoff.bind(this));
+            this.registerCapabilityListener('dim', this.onCapabilitydim.bind(this))
+
+
+        		//register att reportlisteners for onoff
+        		this.registerAttrReportListener('genOnOff', 'onOff', 2, 300, 1, value => {
+        			this.log('onoff', value);
+        			this.setCapabilityValue('onoff', value === 1);
+        		}, 0);
+
+
+        		//register att reportlisteners for dim
+        		this.registerAttrReportListener('genLevelCtrl', 'currentLevel', 2, 300, 1, value => {
+        			this.log('dim report', value);
+        			this.setCapabilityValue('dim', value / maxBrightness);
+        		}, 0);
+
+
+        	}
+
+        	// this method is called when the Device has requested a state change (turned on or off)
+    async onCapabilityOnoff( value, opts, callback ) {
+
+        		// return promise, ignore
+        	try {
+            await this.node.endpoints[0].clusters['genOnOff'].do(value ? "on" : "off", {value}).catch(err => null);
+            console.log('onoff command sent');
+        	} catch(e) {
+            console.log('caught error', e);
+          }
+
+          // return resolved promise
+          return Promise.resolve ( );
+        }
+
+
+          // this method is called when the Device has requested a state change (dim)
+
+        // this method is called when the Device has requested a state change (turned on or off)
+    async onCapabilitydim( value, opts, callback ) {
+
+          // return promise, ignore
+          try {
+            await this.node.endpoints[0].clusters['genLevelCtrl'].do("moveToLevelWithOnOff", {level: (value * maxBrightness), transtime: 10}).catch(err => null);
+            console.log('dim command sent');
+          } catch(e) {
+            console.log('caught error', e);
+          }
+
+          // return resolved promise
+          return Promise.resolve( );
+        }
+
 }
+ module.exports = ESH316GLED;
 
-module.exports = ESH316GLED;
 
 //─────────────── Logging stdout & stderr ───────────────
 //2018-08-11 06:58:25 [log] [ElkoApp] Elko App is running!
