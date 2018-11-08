@@ -7,7 +7,7 @@
         "en": "This app adds support for your ELKO Smart Home devices"
     },
     "category": [ "lights", "climate" ],
-    "version": "0.0.1",
+    "version": "0.0.3",
     "compatibility": ">=1.5.3",
     "sdk": 2,
     "author": {
@@ -53,6 +53,11 @@
                 },
                 "class": "light",
                 "capabilities": [ "onoff", "dim" ],
+                "capabilitiesOptions": {
+                    "dim": {
+                        "setOnDim": "false"
+                              }
+                            },
                 "zigbee": {
                     "manufacturerName": "ELKO",
                     "productId": "ElkoDimmerZHA",
