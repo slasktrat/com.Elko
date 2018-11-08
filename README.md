@@ -32,6 +32,15 @@ Add support for Elko SmartHome to the Athom Homey
  https://paypal.me/prj84
 
 # Changelog
+
+## Version: 0.0.3
+
+- Updated Meshdriver
+- Turned of SetOnDim capability option to prevent forced_timeouts
+
+## Version: 0.0.2
+- Tested som new code to eliminate forced_timeouts with ESH316GLED
+
 ## Version: 0.0.1
 - First beta
 - Includes support for ESH 316GLED RF PH - Dimmer
