@@ -10,11 +10,24 @@ class ESHSUPERTR extends ZigBeeDevice {
 		this.enableDebug();
 		//this.printNode();
 
+		  //Reads Thermostat temperature sensor mode
+			//value: <verified 00=Airsensor, 01=Floor Sensor, 03=Floor Sensor - Wood Floor>
+		  //Register capability
+		  //Poll is used since there is no way to set up att listemer to att 1027 without geting error
+		  this.registerCapability('sensormode', 'hvacThermostat', {
+			  get: '1027',
+			  reportParser: value,
+			  report: '1027',
+			  getOpts: {
+				  getOnLine: true,
+				  getOnStart: true,
+			  },
+		  });
 
 			// Reads if Thermostat is heating or not
 			//Register capability
 			//Poll i used since there is no way to set up att listemer to att 1045 without geting error
-			this.registerCapability('onoff.heat', 'hvacThermostat', {
+			this.registerCapability('heat', 'hvacThermostat', {
 				get: '1045',
 				reportParser: value => value === 1,
 				report: '1045',
@@ -29,8 +42,8 @@ class ESHSUPERTR extends ZigBeeDevice {
 			// Read childlock status
 			//Register capability
 			//Poll i used since there is no way to set up att listemer to att 1043 without geting error
-			this.registerCapability('onoff.childlock', 'hvacThermostat', {
-				get: '1043',
+			this.registerCapability('childlock', 'hvacThermostat', {
+			  get: '1043',
 				reportParser: value => value === 1,
 				report: '1043',
 				getOpts: {
@@ -68,7 +81,7 @@ class ESHSUPERTR extends ZigBeeDevice {
 			},
 		});
 
-		// reportlisteners for the occupiedHeatingSetpoint
+		//Att report listeners for the occupiedHeatingSetpoint
 		this.registerAttrReportListener('hvacThermostat', 'occupiedHeatingSetpoint', 1, 60, 1, data => {
 			const parsedValue = Math.round((data / 100) * 10) / 10;
 			this.log('Att listener occupiedHeatingSetpoint: ', data, parsedValue);
@@ -76,9 +89,7 @@ class ESHSUPERTR extends ZigBeeDevice {
 		}, 0);
 
 
-
-		// Air Temperature
-		// Register capability
+		//Air Temp
 		this.registerCapability('measure_temperature.air', 'hvacThermostat', {
 			get: 'localTemp',
 			reportParser(value) {
@@ -88,20 +99,21 @@ class ESHSUPERTR extends ZigBeeDevice {
 			getOpts: {
 				getOnLine: true,
 				getOnStart: true,
-				pollInterval: 600000,
 			},
-		});
+		},
 
-		//Att report listener - (disabled - use pollintarval to match floor temp)
-		/*this.registerAttrReportListener('hvacThermostat', 'localTemp', 300, 600, 50, value => {
+
+		//Att report listener for localTemp
+		this.registerAttrReportListener('hvacThermostat', 'localTemp', 300, 600, 50, value => {
 			const parsedValue = Math.round((value / 100) * 10) / 10;
 			this.log('Att listener - Air temperature: ', value, parsedValue);
 			this.setCapabilityValue('measure_temperature.air', parsedValue);
 		}, 0);
-*/
 
-		// Floor Temperature
+
+		//Floor Temperature
 		//Register capability
+    //Poll i used since there is no way to set up att listemer to att 1043 without geting error
 		this.registerCapability('measure_temperature.floor', 'hvacThermostat', {
 			get: '1033',
 			reportParser(value) {
@@ -115,13 +127,20 @@ class ESHSUPERTR extends ZigBeeDevice {
 			},
 		});
 
-		//Att report listener - (disabled - use pollintarval - Poll i used since there is no way to set up att listemer to att 1033 without geting error)
-		/*this.registerAttrReportListener('hvacThermostat', '1033', 300, 600, 50, value => {
-			const parsedValue = Math.round((value / 100) * 10) / 10;
-			this.log('Att listener - Floor temperature: ', value, parsedValue);
-			this.setCapabilityValue('measure_temperature.floor', parsedValue);
-		}, 0);
-*/
+		//If measure_temperature.floor is lower than -30 it will show 0
+		if (('measure_temperature.floor') < -30) this.setCapabilityValue('measure_temperature.floor', 0);
+
+		//Set measure_temperature capability based on sensormode
+		switch(sensormode){
+			case 00:
+			this.setCapabilityValue('measure_temperature', 'measure_temperature.air');
+			break;
+			case 01:
+			this.setCapabilityValue('measure_temperature', 'measure_temperature.floor');
+			break;
+			case 03:
+			this.setCapabilityValue('measure_temperature', 'measure_temperature.floor')
+	  }
 
 	}
 }
@@ -174,3 +193,4 @@ module.exports = ESHSUPERTR;
 //2018-08-13 20:00:46 [log] [ManagerDrivers] [ESHSUPERTR] [0] ---- ctrlSeqeOfOper : 2
 //2018-08-13 20:00:46 [log] [ManagerDrivers] [ESHSUPERTR] [0] ---- systemMode : 1
 //2018-08-13 20:00:46 [log] [ManagerDrivers] [ESHSUPERTR] [0] ------------------------------------------
+//(newest software - 1.0.11r m- kan oppdateres, 1.2.0r)
