@@ -33,6 +33,10 @@ Add support for Elko SmartHome to the Athom Homey
 
 # Changelog
 
+## Version: 0.0.4
+- Added Elko ESH316 Remote (NOT Finish)
+- Rewrite of Super TR FR PH driver to match Homey 2.0 software (NOT Finish)
+
 ## Version: 0.0.3
 
 - Updated Meshdriver
