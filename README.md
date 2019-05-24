@@ -33,6 +33,10 @@ Add support for Elko SmartHome to the Athom Homey
 
 # Changelog
 
+## Version: 0.0.4
+- Updated Meshdriver
+- Temp. Fix for forced_timeout issue. Update tries to address the forced_timeout issue by preventing the user from sending multiple commands to the same light "too fast". (Thanks to Espen Herseth Halvorsen for this temp. fix)
+
 ## Version: 0.0.3
 
 - Updated Meshdriver
