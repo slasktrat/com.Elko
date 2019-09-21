@@ -124,6 +124,30 @@ class ESHSUPERTR extends ZigBeeDevice {
 */
 
 	}
+
+    async _registerCapabilityListenerHandler(capabilitySetObj, capabilityId, value, opts) {
+        this.log(`set ${capabilityId} -> ${value}`);
+        if (typeof capabilitySetObj.parser !== 'function') return Promise.reject(new Error('parser_is_not_a_function'));
+
+        let commandId = capabilitySetObj.commandId;
+        if (typeof capabilitySetObj.commandId === 'function') commandId = capabilitySetObj.commandId(value, opts);
+        const parsedPayload = await capabilitySetObj.parser.call(this, value, opts);
+        if (parsedPayload instanceof Error) return Promise.reject(parsedPayload);
+        if (parsedPayload === null) return Promise.resolve();
+
+        try {
+            const cluster = capabilitySetObj.node.endpoints[capabilitySetObj.endpoint].clusters[capabilitySetObj.clusterId];
+            return Homey.app.queuedCall(() =>
+                cluster.do(commandId, parsedPayload)
+                    .catch(err => {
+                        this.error(`Error: could not perform ${commandId} on ${capabilitySetObj.clusterId}`, err);
+                        throw new Error(this.__(i18n.error.could_not_reach_device));
+                    })
+            );
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
 }
 module.exports = ESHSUPERTR;
 
