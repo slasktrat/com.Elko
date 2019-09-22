@@ -47,7 +47,6 @@ class ESH316GLED  extends ZigBeeDevice {
                 cluster.do(commandId, parsedPayload)
                     .catch(err => {
                         this.error(`Error: could not perform ${commandId} on ${capabilitySetObj.clusterId}`, err);
-                        throw new Error(this.__(i18n.error.could_not_reach_device));
                     })
             );
         } catch (err) {
